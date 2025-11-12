@@ -14,8 +14,48 @@ except OSError:
 
 
 class KeyFactsExtractor:
-    """Extract key facts from content instead of simple truncation"""
-    
+    """Intelligent content extraction using NER and importance scoring.
+
+    This class implements a sophisticated content extraction strategy that prioritizes
+    important information over simple truncation. It uses Named Entity Recognition (NER),
+    factual pattern matching, and importance scoring to extract the most relevant
+    sentences from long-form content.
+
+    The extractor is designed for news articles and informational content, identifying:
+        - Named entities (people, organizations, locations)
+        - Factual indicators (percentages, monetary values, dates)
+        - Importance keywords ("announces", "reveals", "record")
+        - Temporal markers (recent information prioritized)
+
+    Algorithm:
+        1. Split content into sentences
+        2. Score each sentence by importance (entities, facts, keywords)
+        3. Rank sentences by score
+        4. Select top sentences within character limit
+        5. Reconstruct coherent text
+
+    Attributes:
+        factual_patterns (Dict[str, str]): Regex patterns for factual content
+            (percentages, monetary values, dates, numbers, comparisons)
+        importance_keywords (Dict[str, List[str]]): Keywords indicating importance
+            by level (high, medium, context)
+        entity_confidence_threshold (float): Minimum confidence for NER entities
+
+    Example:
+        >>> extractor = KeyFactsExtractor()
+        >>> long_text = "... 1500 characters of news content ..."
+        >>> key_facts = extractor.extract_key_facts(
+        ...     content=long_text,
+        ...     interest_category="technology",
+        ...     max_chars=500
+        ... )
+        >>> print(len(key_facts))  # 500 characters of most important content
+
+    Note:
+        Requires SpaCy multilingual model (xx_ent_wiki_sm). Falls back to
+        pattern-based extraction if model is unavailable.
+    """
+
     def __init__(self):
         # Patterns for different types of key information
         self.factual_patterns = {
@@ -52,8 +92,59 @@ class KeyFactsExtractor:
         # Entity confidence tracking
         self.entity_confidence_threshold = 0.7
     
-    def extract_key_facts(self, content: str, interest_category: str = None, max_chars: int = 1200) -> str:
-        """Extract key facts prioritizing important information"""
+    def extract_key_facts(
+        self,
+        content: str,
+        interest_category: Optional[str] = None,
+        max_chars: int = 1200
+    ) -> str:
+        """Extract key facts from content using intelligent importance scoring.
+
+        This method analyzes content sentence-by-sentence, scoring each sentence
+        based on multiple criteria (entities, factual patterns, keywords). It then
+        selects the highest-scoring sentences that fit within the character limit,
+        ensuring the most important information is preserved.
+
+        Args:
+            content: Full text content to extract key facts from (typically news articles)
+            interest_category: Optional category for domain-specific scoring
+                (e.g., "technology", "sports", "economy"). Boosts relevance for
+                category-specific keywords.
+            max_chars: Maximum character count for extracted content. Default 1200.
+
+        Returns:
+            str: Extracted key facts as coherent text, prioritizing high-importance
+                sentences. Original content returned if already under max_chars.
+
+        Algorithm Details:
+            1. Sentence Segmentation: Split on sentence boundaries
+            2. Scoring Criteria:
+                - Base score for length (20-200 chars ideal)
+                - Named entities (PERSON: +2.0, ORG: +1.5, GPE: +1.2 per entity)
+                - Factual patterns (percentages: +2.0, monetary: +1.5 per match)
+                - Importance keywords (high: +1.5, medium: +1.0, context: +0.5)
+                - Category match (+1.0 per category keyword)
+                - Temporal indicators (+0.5 for recent information)
+                - Attribution (+1.0 for credible sources)
+            3. Selection: Top-scoring sentences within max_chars limit
+            4. Reconstruction: Maintain logical flow with proper punctuation
+
+        Example:
+            >>> extractor = KeyFactsExtractor()
+            >>> article = '''
+            ... Le gouvernement annonce une hausse de 12% des investissements.
+            ... Cette décision fait suite à plusieurs mois de négociations.
+            ... Les experts saluent cette initiative historique.
+            ... '''
+            >>> key_facts = extractor.extract_key_facts(article, "economy", 150)
+            >>> print(key_facts)
+            'Le gouvernement annonce une hausse de 12% des investissements. Les experts saluent cette initiative historique.'
+
+        Note:
+            - Very short sentences (< 10 chars) and noise sentences are filtered
+            - Truncation with "..." if partial sentence fits at limit
+            - Performance: O(n) where n is number of sentences
+        """
         if not content or len(content) <= max_chars:
             return content
         
