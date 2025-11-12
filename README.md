@@ -525,6 +525,6 @@ noto/
 
 ## Licence
 
-Copyright (c) 2025 [Nicolas Angougeard]. Tous droits réservés.
+Copyright (c) 2025 Nicolas Angougeard. Tous droits réservés.
 
 Ce projet est un portfolio technique personnel. Le code source est fourni à titre de démonstration uniquement et n'est pas destiné à une utilisation commerciale par des tiers sans autorisation expresse.
