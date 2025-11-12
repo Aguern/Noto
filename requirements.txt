@@ -1,0 +1,44 @@
+# API Framework
+fastapi==0.110.0
+uvicorn==0.27.0
+pydantic==2.6.0
+python-multipart==0.0.9
+
+# WhatsApp Integration
+httpx==0.26.0
+aiofiles==23.2.1
+
+# LLM
+groq==0.4.2
+openai>=1.0.0
+
+# TTS (will be installed via conda for Apple Silicon)
+# TTS==0.22.0
+pydub==0.25.1
+
+# Search & Web Scraping
+beautifulsoup4==4.12.3
+lxml==5.1.0
+
+# AI Content Filtering (2025)
+fastembed==0.3.6
+
+# Database
+sqlalchemy==2.0.25
+alembic==1.13.1
+
+# Cache
+redis==5.0.1
+aiocache==0.12.2
+
+# Utils
+python-dotenv==1.0.0
+loguru==0.7.2
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Development
+pytest==8.0.0
+pytest-asyncio==0.23.3
+black==24.1.1
+flake8==7.0.0
