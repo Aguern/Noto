@@ -133,14 +133,14 @@ sequenceDiagram
 
 ### 1. Architecture anti-hallucination
 
-Les bots d'actualités LLM classiques **hallucinent des faits**. Noto élimine ce problème via :
+Les bots d'actualités LLM classiques **hallucinent des faits**. Noto implémente plusieurs techniques pour minimiser ce problème :
 
 - **Extraction de contenu riche** (8000+ caractères par source) avec `AdvancedContentExtractor`
 - **Reconnaissance d'entités nommées** pour vérifier les entités (personnes, organisations, lieux)
 - **Citations de sources** pour chaque affirmation
 - **Validation de patterns factuels** (pourcentages, valeurs monétaires, dates)
 
-**Résultat :** taux d'hallucination de 0%, précision factuelle de 100%.
+**Approche :** combinaison de techniques pour réduire significativement les hallucinations et améliorer la précision factuelle. Validation complète recommandée avec données réelles en production.
 
 ### 2. Priorisation intelligente du contenu
 
@@ -224,6 +224,8 @@ Utilise **XTTS-v2** (Coqui TTS) pour synthèse vocale naturelle :
 | **Taux de hit cache** | ~70% | Cache Redis pour requêtes répétées (TTL 1h) |
 | **Coût (tier gratuit)** | 0€/mois | Groq gratuit, TTS auto-hébergé, WhatsApp 1000 conversations gratuites |
 | **Scalabilité** | Horizontale | Ajouter workers FastAPI, cluster Redis |
+
+> **Note :** Les métriques ci-dessus sont basées sur la configuration du projet et les tiers d'API au moment du développement (Q1 2025). Les performances réelles dépendent de votre infrastructure, de la charge et des limitations API actuelles. Tests recommandés avant déploiement production.
 
 **Goulot d'étranglement :** rate limits API LLM (résolu avec tier payant ou LLM local)
 
