@@ -523,48 +523,8 @@ noto/
 
 ---
 
-## Améliorations futures
-
-### Court terme (1-2 mois)
-- Support multi-langues (anglais, espagnol, allemand)
-- Briefings planifiés (quotidien à heure spécifiée utilisateur)
-- Boucle de feedback utilisateur (noter qualité actualités)
-- Dashboard web pour gestion préférences
-
-### Moyen terme (3-6 mois)
-- Intégration LLM local (Llama 3, Mistral) pour éliminer coûts API
-- Agrégation multi-sources (Twitter, Reddit, Hacker News)
-- Couche fact-checking (cross-référencer affirmations)
-- Génération podcasts (briefings audio long format)
-
-### Long terme (6-12 mois)
-- Application mobile (iOS/Android natif)
-- Version entreprise (briefings équipe, dashboard analytics)
-- Output multi-modal (résumés vidéo, infographies)
-- Mémoire conversationnelle (questions de suivi, conscience du contexte)
-
----
-
 ## Licence
 
-Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour détails.
+Copyright (c) 2025 [Nicolas Angougeard]. Tous droits réservés.
 
----
-
-## Remerciements
-
-- [Perplexity AI](https://www.perplexity.ai/) - Recherche IA et API Sonar
-- [OpenAI](https://openai.com/) - GPT-4o-mini pour résumés
-- [Groq](https://groq.com/) - Inférence LLM rapide
-- [Coqui TTS](https://github.com/coqui-ai/TTS) - Clonage vocal open source
-- [FastAPI](https://fastapi.tiangolo.com/) - Framework web moderne
-- [WhatsApp Business Platform](https://developers.facebook.com/docs/whatsapp) - Interface messagerie
-- [SpaCy](https://spacy.io/) - NLP industriel
-
----
-
-**Contact :** [Votre email ou LinkedIn]
-
----
-
-*Noto transforme des heures de lecture en minutes d'écoute.*
+Ce projet est un portfolio technique personnel. Le code source est fourni à titre de démonstration uniquement et n'est pas destiné à une utilisation commerciale par des tiers sans autorisation expresse.
