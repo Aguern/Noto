@@ -133,14 +133,14 @@ sequenceDiagram
 
 ### 1. Architecture anti-hallucination
 
-Les bots d'actualités LLM classiques **hallucinent des faits**. Noto élimine ce problème via :
+Les bots d'actualités LLM classiques **hallucinent des faits**. Noto implémente plusieurs techniques pour minimiser ce problème :
 
 - **Extraction de contenu riche** (8000+ caractères par source) avec `AdvancedContentExtractor`
 - **Reconnaissance d'entités nommées** pour vérifier les entités (personnes, organisations, lieux)
 - **Citations de sources** pour chaque affirmation
 - **Validation de patterns factuels** (pourcentages, valeurs monétaires, dates)
 
-**Résultat :** taux d'hallucination de 0%, précision factuelle de 100%.
+**Approche :** combinaison de techniques pour réduire significativement les hallucinations et améliorer la précision factuelle. Validation complète recommandée avec données réelles en production.
 
 ### 2. Priorisation intelligente du contenu
 
@@ -224,6 +224,8 @@ Utilise **XTTS-v2** (Coqui TTS) pour synthèse vocale naturelle :
 | **Taux de hit cache** | ~70% | Cache Redis pour requêtes répétées (TTL 1h) |
 | **Coût (tier gratuit)** | 0€/mois | Groq gratuit, TTS auto-hébergé, WhatsApp 1000 conversations gratuites |
 | **Scalabilité** | Horizontale | Ajouter workers FastAPI, cluster Redis |
+
+> **Note :** Les métriques ci-dessus sont basées sur la configuration du projet et les tiers d'API au moment du développement (Q1 2025). Les performances réelles dépendent de votre infrastructure, de la charge et des limitations API actuelles. Tests recommandés avant déploiement production.
 
 **Goulot d'étranglement :** rate limits API LLM (résolu avec tier payant ou LLM local)
 
@@ -333,6 +335,89 @@ pytest tests/test_orchestrator_error_handling.py  # Résilience erreurs
 - Composants IA : scoring KeyFactsExtractor, validation NER
 - Gestion erreurs : timeouts, résultats vides, parsing JSON, fallbacks
 - Intégration : pipeline complet (Perplexica → LLM → TTS → WhatsApp)
+
+---
+
+## Documentation API
+
+### Interface Swagger/OpenAPI interactive
+
+Noto expose une **documentation API complète et interactive** générée automatiquement par FastAPI.
+
+#### Accès à la documentation
+
+Une fois le serveur démarré :
+
+```bash
+# Démarrer le serveur
+uvicorn app.api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Accédez à la documentation interactive :
+
+- **Swagger UI** : [http://localhost:8000/docs](http://localhost:8000/docs)
+- **ReDoc** : [http://localhost:8000/redoc](http://localhost:8000/redoc)
+- **OpenAPI Schema** : [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json)
+
+### Fonctionnalités de la documentation
+
+La documentation interactive permet de :
+
+- **Explorer tous les endpoints** organisés par tags (System, WhatsApp, Testing)
+- **Voir les schémas de requêtes/réponses** avec exemples
+- **Tester l'API directement** depuis le navigateur
+- **Comprendre le pipeline IA** avec descriptions détaillées
+
+### Catégories d'endpoints
+
+#### System
+- `GET /` - Informations de base sur l'API
+- `GET /health` - Health check complet (DB, cache, APIs, scheduler)
+
+#### WhatsApp
+- `GET /webhook` - Vérification webhook WhatsApp
+- `POST /webhook` - Réception de messages WhatsApp
+
+#### Testing
+- `POST /test/search` - Test recherche Perplexica
+- `POST /test/pipeline` - Test pipeline complet multi-intérêts
+- `POST /test/tts` - Test synthèse vocale
+- `POST /test/message` - Test traitement de message complet
+- `POST /test/briefing` - Test génération de briefing
+
+### Exemples d'utilisation de l'API
+
+#### Health check
+
+```bash
+curl http://localhost:8000/health
+```
+
+#### Test de recherche
+
+```bash
+curl -X POST http://localhost:8000/test/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "actualités intelligence artificielle"}'
+```
+
+#### Test de synthèse vocale
+
+```bash
+curl -X POST http://localhost:8000/test/tts \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Voici les actualités tech du jour"}'
+```
+
+### Schémas de réponse
+
+Tous les endpoints utilisent des schémas Pydantic validés avec :
+- Type hints complets
+- Validation automatique des données
+- Exemples intégrés dans la documentation
+- Messages d'erreur explicites
+
+Voir `app/api/schemas.py` pour tous les modèles de données.
 
 ---
 
