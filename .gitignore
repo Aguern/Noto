@@ -77,6 +77,7 @@ logs/
 
 # Docker
 .docker/
+docker-compose.override.yml
 
 # Temporary files
 *.tmp
@@ -137,3 +138,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# FastAPI
+*.pid
+
+# Alembic (database migrations)
+alembic/versions/*.pyc
+
+# Local development
+.local/
+*.local
