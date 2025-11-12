@@ -253,8 +253,14 @@ class MessageOrchestrator:
             
             # Step 5: Log conversation
             processing_time = (datetime.utcnow() - start_time).total_seconds()
+            # Prepare search results for logging
+            search_results = {
+                "sources": sources_data,
+                "interests_covered": perplexica_results.get("interests_covered", []),
+                "success": True
+            }
             await self._log_conversation(
-                db, user, query, summary_text, search_results, 
+                db, user, query, summary_text, search_results,
                 tokens_used, processing_time, audio_path
             )
             

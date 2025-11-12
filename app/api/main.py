@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 from app.services.orchestrator import MessageOrchestrator
 from app.services.scheduler_service import scheduler_service
-from app.models.database import init_db
+from app.models.database import init_db, get_db, User
 from app.utils.cache import cache
 
 load_dotenv()
