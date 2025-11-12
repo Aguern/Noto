@@ -12,8 +12,44 @@ load_dotenv()
 
 
 class NewsCollector:
-    """Collects news articles using Perplexity Sonar API"""
-    
+    """News collection service using Perplexity Sonar API.
+
+    This service implements PASS 1 of the news briefing pipeline, responsible for
+    collecting recent news articles on specified topics using the Perplexity Sonar
+    search API. It handles caching, validation, and fallback strategies to ensure
+    reliable news collection.
+
+    Features:
+        - Time-range filtered search (24h or 72h)
+        - Domain filtering for trusted sources (Le Monde, Reuters, etc.)
+        - In-memory caching (1 hour TTL)
+        - Automatic fallback from 24h to 72h if coverage is low
+        - News validation and deduplication
+
+    Attributes:
+        api_key (str): Perplexity API key from PPLX_API_KEY env variable
+        base_url (str): Perplexity API base URL
+        timeout (float): API request timeout in seconds
+        model (str): Perplexity model to use ("sonar")
+
+    Example:
+        >>> collector = NewsCollector()
+        >>> result = await collector.collect_news(
+        ...     topic="intelligence artificielle",
+        ...     time_range="24h",
+        ...     limit=10,
+        ...     lang="fr"
+        ... )
+        >>> print(f"Found {len(result['items'])} articles")
+
+    Raises:
+        ValueError: If PPLX_API_KEY environment variable is not set
+
+    Note:
+        Part of the 2-pass news pipeline:
+        PASS 1 (NewsCollector): Collect → PASS 2 (NewsSummarizer): Synthesize
+    """
+
     def __init__(self):
         self.api_key = os.getenv("PPLX_API_KEY")
         if not self.api_key:
@@ -29,18 +65,54 @@ class NewsCollector:
         time_range: str = "24h",
         limit: int = 10,
         lang: str = "fr"
-    ) -> Dict:
-        """
-        Collect news articles on a topic
-        
+    ) -> Dict[str, any]:
+        """Collect recent news articles on a specific topic via Perplexity Sonar.
+
+        This method performs intelligent news collection with automatic fallback
+        strategies. It first attempts to collect articles within the specified
+        time range, then falls back to a longer time range if coverage is insufficient.
+
+        The method implements:
+            - Cached results (1-hour TTL) to reduce API calls
+            - News validation and filtering via NewsValidator
+            - Automatic fallback from 24h to 72h if < 5 items found
+            - Chronological sorting (most recent first)
+            - Coverage quality indicators
+
         Args:
-            topic: Topic to search for
-            time_range: "24h" or "72h"
-            limit: Maximum number of items (6-10)
-            lang: Language code
-            
+            topic: Search topic (e.g., "intelligence artificielle", "économie france")
+            time_range: Time window for news collection
+                - "24h": Last 24 hours (default)
+                - "72h": Last 3 days
+            limit: Maximum number of articles to return (recommended: 6-10)
+            lang: Language code for search (default: "fr")
+
         Returns:
-            Dict with items list and optional note
+            Dict containing:
+                - items (List[Dict]): List of validated news items, each with:
+                    - title (str): Article title
+                    - url (str): Source URL
+                    - content (str): Article content/snippet
+                    - published_at_ISO (str): Publication timestamp
+                    - source (str): Publisher name
+                - topic (str): Original search topic
+                - time_range (str): Actual time range used (may differ if fallback)
+                - collected_at (str): ISO timestamp of collection
+                - note (str, optional): "coverage_low" or "collection_failed"
+                - error (str, optional): Error message if collection failed
+
+        Example:
+            >>> collector = NewsCollector()
+            >>> result = await collector.collect_news("blockchain", "24h", 10)
+            >>> if result.get("note") != "collection_failed":
+            ...     for item in result["items"]:
+            ...         print(f"{item['title']} - {item['source']}")
+
+        Note:
+            - Cached results are keyed by (topic, time_range, lang, date_hour)
+            - Results with < 3 items trigger "coverage_low" note
+            - API errors result in empty items list with "collection_failed" note
+            - Fallback mechanism ensures best effort coverage
         """
         try:
             # Import cache and validate utilities

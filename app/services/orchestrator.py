@@ -16,10 +16,55 @@ from app.services.news.collector_sonar import NewsCollector
 from app.services.news.summarizer_gpt5 import NewsSummarizer
 from app.utils.validate import NewsValidator
 
+# Constants for search configuration
+MAX_RESULTS_PER_INTEREST = 1  # Optimized to avoid API timeouts while maintaining quality
+DEFAULT_MAX_RESULTS = 5  # Default number of search results if user has no preferences
+MINIMUM_NEWS_ITEMS = 3  # Minimum number of news items required for a valid briefing
+NEWS_BRIEF_MAX_WORDS = 250  # Maximum words for text brief
+NEWS_BRIEF_AUDIO_WORDS = 140  # Shorter word count for audio version
+
 
 class MessageOrchestrator:
-    """Main orchestrator for processing WhatsApp messages"""
-    
+    """Orchestrates the complete message processing pipeline for WhatsApp AI Bot.
+
+    This class serves as the central coordinator for all incoming WhatsApp messages,
+    managing the flow from message reception to response delivery. It implements
+    the command pattern for message routing and coordinates multiple AI services
+    (Perplexica search, LLM processing, TTS generation) to deliver personalized
+    news briefings and search responses.
+
+    Architecture:
+        WhatsApp Message → Orchestrator → [Perplexica, LLM, TTS] → WhatsApp Response
+
+    The orchestrator implements:
+        - User onboarding flow with state machine
+        - Command routing (/help, /start, /keywords, etc.)
+        - Multi-interest search orchestration via Perplexica
+        - Conversation logging and analytics
+        - Error handling and fallback strategies
+
+    Attributes:
+        llm_service (LLMService): Service for LLM operations (summarization, formatting)
+        tts_service (TTSService): Service for text-to-speech audio generation
+        whatsapp_service (WhatsAppService): Service for WhatsApp API communication
+        perplexica_service (PerplexicaService): AI-powered search service (UNIQUE pipeline)
+        news_collector (NewsCollector): News collection using Perplexity Sonar
+        news_summarizer (NewsSummarizer): GPT-based news summarization
+        commands (Dict): Mapping of command strings to handler methods
+        onboarding_handlers (Dict): State machine handlers for user onboarding
+
+    Example:
+        >>> orchestrator = MessageOrchestrator()
+        >>> await orchestrator.process_message(
+        ...     phone_number="+33612345678",
+        ...     message_data={"type": "text", "text": {"body": "actualités tech"}}
+        ... )
+
+    Note:
+        Perplexica is configured as the UNIQUE search pipeline. Traditional search
+        has been deprecated per ARCHITECTURE_UNIQUE.md specifications.
+    """
+
     def __init__(self):
         # Initialize services
         self.llm_service = LLMService()
@@ -68,13 +113,49 @@ class MessageOrchestrator:
             "final": self._handle_onboarding_final
         }
     
-    async def process_message(self, phone_number: str, message_data: Dict):
-        """
-        Process incoming WhatsApp message
-        
+    async def process_message(
+        self,
+        phone_number: str,
+        message_data: Dict[str, any]
+    ) -> None:
+        """Process incoming WhatsApp message through the complete AI pipeline.
+
+        This is the main entry point for all incoming WhatsApp messages. It handles:
+        - User creation and retrieval
+        - Message type routing (text, audio, or unsupported types)
+        - Error handling with graceful fallback messages
+        - Database session management
+
+        The method delegates to specialized handlers based on message type and
+        user state (onboarding, command, or standard query).
+
         Args:
-            phone_number: Sender's phone number
-            message_data: WhatsApp message data
+            phone_number: User's phone number in E.164 format (e.g., "+33612345678")
+            message_data: WhatsApp message payload containing:
+                - type (str): Message type ("text", "audio", etc.)
+                - text (dict, optional): Text message with {"body": "content"}
+                - audio (dict, optional): Audio message with {"id": "media_id"}
+                - timestamp (str): Unix timestamp of message
+
+        Returns:
+            None. Responses are sent asynchronously via WhatsApp service.
+
+        Raises:
+            No exceptions are raised. All errors are caught and result in error
+            messages sent to the user via WhatsApp.
+
+        Example:
+            >>> message_data = {
+            ...     "type": "text",
+            ...     "text": {"body": "actualités tech"},
+            ...     "timestamp": "1234567890"
+            ... }
+            >>> await orchestrator.process_message("+33612345678", message_data)
+
+        Note:
+            This method is designed to return quickly to WhatsApp webhooks (< 10s)
+            to avoid timeout issues. Long-running operations should be optimized
+            or moved to background tasks.
         """
         start_time = datetime.utcnow()
         
@@ -159,7 +240,7 @@ class MessageOrchestrator:
             
             # Get user preferences
             preferences = db.query(Preference).filter(Preference.user_id == user.id).first()
-            max_results = preferences.max_results if preferences else 5
+            max_results = preferences.max_results if preferences else DEFAULT_MAX_RESULTS
             summary_style = preferences.summary_style if preferences else "concise"
             
             # Step 1: Multi-interest search (Perplexica or traditional)
@@ -185,7 +266,7 @@ class MessageOrchestrator:
             perplexica_results = await self.perplexica_service.search_multi_interests(
                 interests=user_keywords,
                 base_query="actualités",
-                max_results_per_interest=1  # Optimisé pour éviter timeouts
+                max_results_per_interest=MAX_RESULTS_PER_INTEREST
             )
             
             # Vérifier le succès de la recherche
@@ -999,7 +1080,7 @@ Vous n'avez pas de résumés quotidiens programmés.
             )
             
             # Check if we have enough news
-            if len(news_result.get("items", [])) < 3:
+            if len(news_result.get("items", [])) < MINIMUM_NEWS_ITEMS:
                 await self.whatsapp_service.send_text_message(
                     user.phone_number,
                     f"Peu d'actualités trouvées pour '{topic}'. Réessayez plus tard."
@@ -1011,8 +1092,8 @@ Vous n'avez pas de résumés quotidiens programmés.
             brief_result = await self.news_summarizer.brief_from_items(
                 items=news_result["items"],
                 first_name=user.name.split()[0] if user.name else "vous",
-                max_words=250,
-                audio_words=140,
+                max_words=NEWS_BRIEF_MAX_WORDS,
+                audio_words=NEWS_BRIEF_AUDIO_WORDS,
                 lang=user.language
             )
             
