@@ -1,72 +1,71 @@
-# 🤖 Noto - Personal AI News Agent
+# Noto - Agent IA d'information personnalisé
 
-> **An autonomous AI agent** that collects, analyzes, and delivers personalized news briefings via WhatsApp with voice synthesis.
+> Agent autonome qui collecte, analyse et délivre des briefings d'actualités personnalisés via WhatsApp avec synthèse vocale.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-00a393.svg)](https://fastapi.tiangolo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)]()
 
 ---
 
-## 🎯 The Problem
+## Problématique
 
-**Information overload** is real. Staying informed across multiple interests (tech, politics, economy, sports) requires hours of manual reading from dozens of sources. Traditional news apps deliver **generic content**, not tailored to your specific interests.
+La surcharge informationnelle est un problème réel. Rester informé sur plusieurs sujets (tech, politique, économie, sport) nécessite des heures de lecture depuis des dizaines de sources. Les applications d'actualités classiques délivrent du contenu générique, pas adapté aux intérêts spécifiques.
 
-## 💡 The Solution
+## Solution proposée
 
-**Noto** is an **end-to-end AI pipeline** that automates the entire news consumption workflow:
+Noto est un **pipeline IA de bout en bout** qui automatise le processus complet de consommation d'information :
 
-1. **Collects** recent news from trusted sources using AI search (Perplexity Sonar)
-2. **Analyzes** content with Named Entity Recognition and importance scoring
-3. **Synthesizes** personalized summaries using LLMs (GPT-4o-mini)
-4. **Delivers** via WhatsApp with natural voice clones (XTTS-v2)
+1. **Collecte** d'actualités récentes depuis des sources fiables (Perplexity Sonar)
+2. **Analyse** du contenu via reconnaissance d'entités nommées et scoring d'importance
+3. **Synthèse** de résumés personnalisés via LLMs (GPT-4o-mini)
+4. **Livraison** sur WhatsApp avec clonage vocal naturel (XTTS-v2)
 
-**Result:** 5-minute personalized audio briefings instead of 30+ minutes of reading.
+**Résultat :** briefings audio personnalisés de 5 minutes au lieu de 30+ minutes de lecture.
 
 ---
 
-## 🏗️ Architecture
+## Architecture technique
 
-### System Overview
+### Vue d'ensemble
 
-Noto implements a **multi-stage AI pipeline** following the ARCHITECTURE_UNIQUE.md specification:
+Noto implémente un **pipeline IA multi-étapes** selon la spécification ARCHITECTURE_UNIQUE.md :
 
 ```mermaid
 graph TB
-    subgraph "User Interface"
-        WA[WhatsApp User]
+    subgraph "Interface utilisateur"
+        WA[Utilisateur WhatsApp]
     end
 
-    subgraph "API Layer (FastAPI)"
-        WHK[Webhook Endpoint<br/>/webhook]
+    subgraph "Couche API - FastAPI"
+        WHK[Endpoint Webhook<br/>/webhook]
         API[REST API<br/>/health, /test/*]
     end
 
-    subgraph "Orchestration Layer"
-        ORCH[MessageOrchestrator<br/>State Machine + Command Router]
+    subgraph "Couche orchestration"
+        ORCH[MessageOrchestrator<br/>Machine à états + Routeur de commandes]
     end
 
-    subgraph "AI Pipeline - PASS 1: Collection"
-        PPX[Perplexica Service<br/>AI-Powered Search]
-        SONAR[NewsCollector<br/>Perplexity Sonar API]
-        FILTER[SmartSourceManager<br/>Quality Filtering]
+    subgraph "Pipeline IA - PASS 1 : Collecte"
+        PPX[Perplexica Service<br/>Recherche IA]
+        SONAR[NewsCollector<br/>API Perplexity Sonar]
+        FILTER[SmartSourceManager<br/>Filtrage qualité]
     end
 
-    subgraph "AI Pipeline - PASS 2: Processing"
+    subgraph "Pipeline IA - PASS 2 : Traitement"
         EXTRACT[AdvancedContentExtractor<br/>8000+ chars/source]
-        NER[KeyFactsExtractor<br/>NER + Importance Scoring]
-        LLM[LLMService<br/>GPT-4o-mini Synthesis]
+        NER[KeyFactsExtractor<br/>NER + Scoring importance]
+        LLM[LLMService<br/>Synthèse GPT-4o-mini]
     end
 
-    subgraph "Delivery"
-        TTS[TTSService<br/>XTTS-v2 Voice Cloning]
-        WAAPI[WhatsAppService<br/>Business API]
+    subgraph "Livraison"
+        TTS[TTSService<br/>Clonage vocal XTTS-v2]
+        WAAPI[WhatsAppService<br/>API Business]
     end
 
-    subgraph "Data & Cache"
+    subgraph "Données et cache"
         DB[(SQLite<br/>Users, Preferences,<br/>Conversations)]
-        CACHE[(Redis<br/>Search Results,<br/>1h TTL)]
+        CACHE[(Redis<br/>Résultats recherche,<br/>TTL 1h)]
     end
 
     WA -->|Message| WHK
@@ -81,9 +80,9 @@ graph TB
 
     LLM --> TTS
     TTS --> WAAPI
-    WAAPI -->|Audio + Text| WA
+    WAAPI -->|Audio + Texte| WA
 
-    ORCH -.->|Store| DB
+    ORCH -.->|Stockage| DB
     PPX -.->|Cache| CACHE
     SONAR -.->|Cache| CACHE
 
@@ -96,487 +95,476 @@ graph TB
     class DB,CACHE data
 ```
 
-### Data Flow
+### Flux de données
 
 ```mermaid
 sequenceDiagram
-    participant User as WhatsApp User
-    participant Bot as Noto Bot
-    participant Perp as Perplexica AI
+    participant User as Utilisateur WhatsApp
+    participant Bot as Bot Noto
+    participant Perp as Perplexica IA
     participant NER as KeyFactsExtractor
     participant LLM as GPT-4o-mini
     participant TTS as XTTS-v2
 
     User->>Bot: "actualités tech"
     Bot->>Perp: search_multi_interests(["tech", "IA"])
-    Note over Perp: Multi-interest search<br/>8000+ chars/source
+    Note over Perp: Recherche multi-intérêts<br/>8000+ chars/source
     Perp-->>Bot: {sources: [...], content: "..."}
 
     Bot->>NER: extract_key_facts(content)
-    Note over NER: NER + Importance Scoring<br/>Entities, percentages, keywords
-    NER-->>Bot: Prioritized facts (1200 chars)
+    Note over NER: NER + Scoring importance<br/>Entités, pourcentages, mots-clés
+    NER-->>Bot: Faits prioritaires (1200 chars)
 
     Bot->>LLM: format_for_whatsapp(facts, user_name)
-    Note over LLM: Personalized summary<br/>Noto style format
+    Note over LLM: Résumé personnalisé<br/>Format style Noto
     LLM-->>Bot: "Bonjour Nicolas! Voici..."
 
     Bot->>TTS: text_to_speech(summary, voice_profile)
-    Note over TTS: Voice cloning<br/>User's voice
+    Note over TTS: Clonage vocal<br/>Voix de l'utilisateur
     TTS-->>Bot: audio.ogg
 
-    Bot->>User: 🎙️ Audio + 📄 Sources
-    Note over User: 5-min personalized<br/>briefing ready
+    Bot->>User: Audio + Sources
+    Note over User: Briefing personnalisé<br/>de 5 min prêt
 ```
 
 ---
 
-## 🚀 Key Technical Features
+## Caractéristiques techniques principales
 
-### 1. **Zero-Hallucination Architecture**
+### 1. Architecture anti-hallucination
 
-Traditional LLM news bots **hallucinate facts**. Noto eliminates this by:
+Les bots d'actualités LLM classiques **hallucinent des faits**. Noto élimine ce problème via :
 
-- **Rich content extraction** (8000+ chars per source) via `AdvancedContentExtractor`
-- **Named Entity Recognition** to verify entities (people, organizations, locations)
-- **Source citations** for every claim
-- **Factual pattern validation** (percentages, monetary values, dates)
+- **Extraction de contenu riche** (8000+ caractères par source) avec `AdvancedContentExtractor`
+- **Reconnaissance d'entités nommées** pour vérifier les entités (personnes, organisations, lieux)
+- **Citations de sources** pour chaque affirmation
+- **Validation de patterns factuels** (pourcentages, valeurs monétaires, dates)
 
-**Result:** 0% hallucination rate, 100% factual accuracy.
+**Résultat :** taux d'hallucination de 0%, précision factuelle de 100%.
 
-### 2. **Intelligent Content Prioritization**
+### 2. Priorisation intelligente du contenu
 
-The `KeyFactsExtractor` implements a **multi-criteria scoring algorithm**:
+Le `KeyFactsExtractor` implémente un **algorithme de scoring multi-critères** :
 
 ```python
 Score = (
-    Base(length) +                      # Prefer substantial sentences (20-200 chars)
-    Entities(PERSON: +2.0, ORG: +1.5) + # Named entities boost importance
-    Facts(percentages: +2.0) +          # Numerical data is key
-    Keywords(high: +1.5, medium: +1.0) +# "announces", "reveals", "record"
-    Category(+1.0) +                    # User's interest match
-    Temporal(+0.5) +                    # Recent information
-    Attribution(+1.0)                   # Credible sources
+    Base(longueur) +                    # Phrases substantielles (20-200 chars)
+    Entités(PERSON: +2.0, ORG: +1.5) + # Les entités nommées boostent l'importance
+    Faits(pourcentages: +2.0) +         # Les données numériques sont clés
+    Mots-clés(high: +1.5, medium: +1.0) + # "annonce", "révèle", "record"
+    Catégorie(+1.0) +                   # Correspondance avec intérêts utilisateur
+    Temporel(+0.5) +                    # Information récente
+    Attribution(+1.0)                   # Sources crédibles
 )
 ```
 
-This ensures the **most important information** is preserved within character limits.
+Cela garantit que **l'information la plus importante** est préservée dans les limites de caractères.
 
-### 3. **Production-Ready Error Handling**
+### 3. Gestion d'erreurs production-ready
 
-Comprehensive error handling for **all failure modes**:
+Gestion d'erreurs complète pour **tous les modes de défaillance** :
 
-- ✅ API timeouts (Perplexica, LLM, WhatsApp)
-- ✅ Empty search results → User-friendly fallback
-- ✅ JSON parsing failures → Graceful recovery
-- ✅ TTS failures → Fallback to text-only
-- ✅ Database failures → Continue pipeline, log error
-- ✅ Rate limits → Retry with exponential backoff
+- Timeouts API (Perplexica, LLM, WhatsApp)
+- Résultats de recherche vides → Fallback user-friendly
+- Échecs de parsing JSON → Récupération gracieuse
+- Échecs TTS → Fallback texte seul
+- Échecs de base de données → Continuer le pipeline, logger l'erreur
+- Rate limits → Retry avec exponential backoff
 
-See `tests/test_orchestrator_error_handling.py` for validation.
+Voir `tests/test_orchestrator_error_handling.py` pour validation.
 
-### 4. **Voice Cloning Pipeline**
+### 4. Pipeline de clonage vocal
 
-Uses **XTTS-v2** (Coqui TTS) for natural voice synthesis:
+Utilise **XTTS-v2** (Coqui TTS) pour synthèse vocale naturelle :
 
-1. User sends 10-15 second audio sample
-2. Voice profile extracted and stored
-3. All future summaries use cloned voice
-4. Fallback to default voice if cloning unavailable
+1. Utilisateur envoie échantillon audio de 10-15 secondes
+2. Profil vocal extrait et stocké
+3. Tous les futurs résumés utilisent la voix clonée
+4. Fallback vers voix par défaut si clonage indisponible
 
-**Quality:** Near-human naturalness with proper intonation.
+**Qualité :** naturalité quasi-humaine avec intonation correcte.
 
 ---
 
-## 📊 Tech Stack
+## Stack technologique
 
-### Backend & API
-- **FastAPI** - Modern async web framework
+### Backend et API
+- **FastAPI** - Framework web async moderne
 - **Python 3.10+** - Type hints, asyncio
-- **SQLAlchemy** - ORM for database
-- **SQLite** - Local database (production: PostgreSQL)
+- **SQLAlchemy** - ORM pour base de données
+- **SQLite** - Base de données locale (production : PostgreSQL)
 
-### AI & ML
-- **Perplexity Sonar API** - AI-powered news collection
-- **OpenAI GPT-4o-mini** - News summarization and formatting
-- **Groq API** - Alternative LLM (Llama 3.8B, free tier)
-- **SpaCy (xx_ent_wiki_sm)** - Multilingual NER
-- **XTTS-v2 (Coqui TTS)** - Neural voice cloning
+### IA et ML
+- **Perplexity Sonar API** - Collecte d'actualités par IA
+- **OpenAI GPT-4o-mini** - Résumé et formatage des actualités
+- **Groq API** - LLM alternatif (Llama 3.8B, tier gratuit)
+- **SpaCy (xx_ent_wiki_sm)** - NER multilingue
+- **XTTS-v2 (Coqui TTS)** - Clonage vocal neural
 
 ### Infrastructure
-- **Docker & Docker Compose** - Containerization
-- **Redis** - Caching layer (1-hour TTL)
-- **Perplexica** - Self-hosted AI search engine
-- **WhatsApp Business API** - Messaging interface
+- **Docker & Docker Compose** - Conteneurisation
+- **Redis** - Couche de cache (TTL 1 heure)
+- **Perplexica** - Moteur de recherche IA auto-hébergé
+- **WhatsApp Business API** - Interface de messagerie
 
-### Testing & Quality
-- **pytest** - Unit and integration tests
-- **pytest-asyncio** - Async test support
-- **Coverage.py** - Code coverage tracking
-
----
-
-## 📈 Performance & Scalability
-
-| Metric | Value | Notes |
-|--------|-------|-------|
-| **Response Time** | 8-15s | Perplexica search: 5-8s, LLM: 2-4s, TTS: 1-3s |
-| **Throughput** | ~50 requests/min | Limited by Groq free tier (30 RPM) |
-| **Concurrency** | Unlimited | Async processing, FastAPI handles concurrent users |
-| **Cache Hit Rate** | ~70% | Redis cache for repeated queries (1h TTL) |
-| **Cost (Free Tier)** | $0/month | Groq free, self-hosted TTS, WhatsApp 1000 free conversations |
-| **Scalability** | Horizontal | Add more FastAPI workers, Redis cluster |
-
-**Bottleneck:** LLM API rate limits (solvable with paid tier or local LLM)
+### Tests et qualité
+- **pytest** - Tests unitaires et d'intégration
+- **pytest-asyncio** - Support tests async
+- **Coverage.py** - Suivi de couverture de code
 
 ---
 
-## 🛠️ Installation & Setup
+## Performance et scalabilité
 
-### Prerequisites
+| Métrique | Valeur | Notes |
+|----------|--------|-------|
+| **Temps de réponse** | 8-15s | Recherche Perplexica : 5-8s, LLM : 2-4s, TTS : 1-3s |
+| **Débit** | ~50 requêtes/min | Limité par tier gratuit Groq (30 RPM) |
+| **Concurrence** | Illimitée | Traitement async, FastAPI gère utilisateurs concurrents |
+| **Taux de hit cache** | ~70% | Cache Redis pour requêtes répétées (TTL 1h) |
+| **Coût (tier gratuit)** | 0€/mois | Groq gratuit, TTS auto-hébergé, WhatsApp 1000 conversations gratuites |
+| **Scalabilité** | Horizontale | Ajouter workers FastAPI, cluster Redis |
+
+**Goulot d'étranglement :** rate limits API LLM (résolu avec tier payant ou LLM local)
+
+---
+
+## Installation et configuration
+
+### Prérequis
 
 - Python 3.10+
 - Docker & Docker Compose
-- WhatsApp Business API account ([Get started](https://developers.facebook.com/docs/whatsapp))
-- Groq API key ([Free tier](https://console.groq.com/keys))
-- Perplexity API key ([Get key](https://www.perplexity.ai/settings/api))
-- OpenAI API key ([Platform](https://platform.openai.com/api-keys))
+- Compte WhatsApp Business API ([Démarrer](https://developers.facebook.com/docs/whatsapp))
+- Clé API Groq ([Tier gratuit](https://console.groq.com/keys))
+- Clé API Perplexity ([Obtenir clé](https://www.perplexity.ai/settings/api))
+- Clé API OpenAI ([Plateforme](https://platform.openai.com/api-keys))
 
-### Quick Start
+### Démarrage rapide
 
 ```bash
-# 1. Clone and navigate
+# 1. Cloner et naviguer
 git clone https://github.com/yourusername/noto.git
 cd noto
 
-# 2. Create environment
+# 2. Créer environnement
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows : venv\Scripts\activate
 
-# 3. Install dependencies
+# 3. Installer dépendances
 pip install -r requirements.txt
 
-# 4. Configure environment
+# 4. Configurer environnement
 cp .env.example .env
-# Edit .env with your API keys (see Configuration section below)
+# Éditer .env avec vos clés API (voir section Configuration)
 
-# 5. Initialize database
+# 5. Initialiser base de données
 python -c "from app.models.database import init_db; init_db()"
 
-# 6. Start Redis cache
+# 6. Démarrer cache Redis
 docker-compose up -d redis
 
-# 7. Run the bot
+# 7. Lancer le bot
 uvicorn app.api.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Configuration
 
-Edit `.env` with your API keys:
+Éditer `.env` avec vos clés API :
 
 ```bash
-# WhatsApp Business API
-WHATSAPP_TOKEN=your_meta_access_token
-WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id
-WHATSAPP_VERIFY_TOKEN=your_random_verify_token
+# API WhatsApp Business
+WHATSAPP_TOKEN=votre_token_meta
+WHATSAPP_PHONE_NUMBER_ID=votre_phone_number_id
+WHATSAPP_VERIFY_TOKEN=votre_token_verification_aleatoire
 
-# AI Services
-GROQ_API_KEY=your_groq_api_key          # Free tier: 30 req/min
-OPENAI_API_KEY=your_openai_api_key      # GPT-4o-mini for summaries
-PPLX_API_KEY=your_perplexity_api_key    # Sonar for news collection
+# Services IA
+GROQ_API_KEY=votre_cle_groq          # Tier gratuit : 30 req/min
+OPENAI_API_KEY=votre_cle_openai      # GPT-4o-mini pour résumés
+PPLX_API_KEY=votre_cle_perplexity    # Sonar pour collecte actualités
 
-# Optional: Perplexica (self-hosted AI search)
+# Optionnel : Perplexica (recherche IA auto-hébergée)
 USE_PERPLEXICA=true
 PERPLEXICA_URL=http://localhost:3001
 
-# TTS Configuration
-TTS_DEVICE=mps  # For Apple Silicon, use 'cuda' for NVIDIA, 'cpu' otherwise
+# Configuration TTS
+TTS_DEVICE=mps  # Pour Apple Silicon, 'cuda' pour NVIDIA, 'cpu' sinon
 ```
 
-See `.env.example` for all configuration options.
+Voir `.env.example` pour toutes les options de configuration.
 
-### Docker Deployment
+### Déploiement Docker
 
 ```bash
-# Build and start all services
+# Build et démarrage de tous les services
 docker-compose up --build -d
 
-# View logs
+# Voir les logs
 docker-compose logs -f api
 
-# Stop services
+# Arrêter services
 docker-compose down
 ```
 
 ---
 
-## 🧪 Testing
+## Tests
 
-### Run All Tests
+### Lancer tous les tests
 
 ```bash
-# Run full test suite
+# Lancer suite de tests complète
 pytest
 
-# With coverage report
+# Avec rapport de couverture
 pytest --cov=app --cov-report=html
 
-# Run specific test categories
-pytest tests/test_api.py          # API endpoints
-pytest tests/test_integration.py  # Integration tests
-pytest tests/test_key_facts_extractor.py  # NER + scoring logic
-pytest tests/test_orchestrator_error_handling.py  # Error resilience
+# Lancer catégories de tests spécifiques
+pytest tests/test_api.py          # Endpoints API
+pytest tests/test_integration.py  # Tests d'intégration
+pytest tests/test_key_facts_extractor.py  # Logique NER + scoring
+pytest tests/test_orchestrator_error_handling.py  # Résilience erreurs
 ```
 
-### Test Coverage
+### Couverture des tests
 
-- ✅ **API Layer:** Webhook validation, message routing, CORS
-- ✅ **Orchestration:** Command handling, onboarding flow, search pipeline
-- ✅ **AI Components:** KeyFactsExtractor scoring, NER validation
-- ✅ **Error Handling:** Timeouts, empty results, JSON parsing, fallbacks
-- ✅ **Integration:** End-to-end pipeline (Perplexica → LLM → TTS → WhatsApp)
+- Couche API : validation webhook, routage messages, CORS
+- Orchestration : gestion commandes, flux onboarding, pipeline recherche
+- Composants IA : scoring KeyFactsExtractor, validation NER
+- Gestion erreurs : timeouts, résultats vides, parsing JSON, fallbacks
+- Intégration : pipeline complet (Perplexica → LLM → TTS → WhatsApp)
 
 ---
 
-## 💬 User Interaction
+## Interaction utilisateur
 
-### Commands
-
-```
-/start        - Welcome message and setup
-/help         - Complete command list
-/keywords     - Set interests (tech, sport, crypto, etc.)
-/briefing     - Get instant news briefing
-/centres      - Update topics
-/audio on|off - Toggle audio responses
-/pref         - View all preferences
-/stats        - Usage statistics
-/clear        - Clear conversation history
-/stop         - Disable automatic briefings
-```
-
-### Onboarding Flow
-
-1. **Welcome** → User receives intro message
-2. **Keywords** → User specifies interests (e.g., "tech, économie, crypto")
-3. **Validation** → Confirm topics
-4. **Schedule** → Set daily briefing time (optional)
-5. **Voice** → Upload audio sample for cloning (optional)
-6. **Ready!** → Receive first personalized briefing
-
-### Usage Examples
+### Commandes
 
 ```
-User: actualités tech aujourd'hui
-Noto: 🎙️ [Audio: 2min 30s]
-      📄 Sources:
-      [1] Le Monde - IA réglementée en Europe
-      [2] TechCrunch - OpenAI lance GPT-5
-      [3] Les Échos - Tech française lève 500M€
+/start        - Message de bienvenue et configuration
+/help         - Liste complète des commandes
+/keywords     - Définir intérêts (tech, sport, crypto, etc.)
+/briefing     - Obtenir briefing instantané
+/centres      - Mettre à jour les sujets
+/audio on|off - Activer/désactiver réponses audio
+/pref         - Voir toutes les préférences
+/stats        - Statistiques d'utilisation
+/clear        - Effacer historique conversations
+/stop         - Désactiver briefings automatiques
+```
 
-User: /keywords crypto, blockchain, web3
-Noto: ✅ Centres d'intérêt mis à jour
-      Vos mots-clés : crypto, blockchain, web3
+### Flux d'onboarding
+
+1. **Bienvenue** → Utilisateur reçoit message intro
+2. **Mots-clés** → Utilisateur spécifie intérêts (ex : "tech, économie, crypto")
+3. **Validation** → Confirmer sujets
+4. **Planning** → Définir heure briefing quotidien (optionnel)
+5. **Voix** → Uploader échantillon audio pour clonage (optionnel)
+6. **Prêt** → Recevoir premier briefing personnalisé
+
+### Exemples d'usage
+
+```
+Utilisateur : actualités tech aujourd'hui
+Noto : [Audio : 2min 30s]
+       Sources :
+       [1] Le Monde - IA réglementée en Europe
+       [2] TechCrunch - OpenAI lance GPT-5
+       [3] Les Échos - Tech française lève 500M€
+
+Utilisateur : /keywords crypto, blockchain, web3
+Noto : Centres d'intérêt mis à jour
+       Vos mots-clés : crypto, blockchain, web3
 ```
 
 ---
 
-## 🎨 Methodology: AI Pipeline Design
+## Méthodologie : conception du pipeline IA
 
-### PASS 1: Collection (News Discovery)
+### PASS 1 : Collecte (découverte d'actualités)
 
-**Objective:** Gather high-quality, recent news from trusted sources.
+**Objectif :** rassembler actualités récentes de qualité depuis sources fiables.
 
-**Tools:**
-- `NewsCollector` (Perplexity Sonar API)
-- `SmartSourceManager` (domain filtering)
+**Outils :**
+- `NewsCollector` (API Perplexity Sonar)
+- `SmartSourceManager` (filtrage domaines)
 
-**Strategy:**
-1. Multi-interest search (user's topics: ["tech", "économie"])
-2. Time-range filtering (24h or 72h with automatic fallback)
-3. Domain whitelist (Le Monde, Reuters, TechCrunch, etc.)
-4. Deduplication and validation
-5. Cache results (1 hour TTL)
+**Stratégie :**
+1. Recherche multi-intérêts (sujets utilisateur : ["tech", "économie"])
+2. Filtrage temporel (24h ou 72h avec fallback automatique)
+3. Whitelist domaines (Le Monde, Reuters, TechCrunch, etc.)
+4. Déduplication et validation
+5. Cache des résultats (TTL 1 heure)
 
-**Output:** 6-10 validated news items with full content
+**Output :** 6-10 articles d'actualités validés avec contenu complet
 
-### PASS 2: Processing (Intelligent Extraction)
+### PASS 2 : Traitement (extraction intelligente)
 
-**Objective:** Extract the most important facts while preserving factual accuracy.
+**Objectif :** extraire les faits les plus importants en préservant la précision factuelle.
 
-**Tools:**
-- `AdvancedContentExtractor` (8000+ chars per article)
-- `KeyFactsExtractor` (NER + importance scoring)
+**Outils :**
+- `AdvancedContentExtractor` (8000+ caractères par article)
+- `KeyFactsExtractor` (NER + scoring importance)
 
-**Strategy:**
-1. Parse full article content (no truncation)
-2. Named Entity Recognition (SpaCy multilingual model)
-3. Factual pattern detection (percentages, monetary, dates)
-4. Sentence importance scoring (multi-criteria algorithm)
-5. Select top sentences within 1200-char limit
-6. Reconstruct coherent text with proper punctuation
+**Stratégie :**
+1. Parser contenu article complet (pas de troncature)
+2. Reconnaissance d'entités nommées (modèle SpaCy multilingue)
+3. Détection patterns factuels (pourcentages, monétaire, dates)
+4. Scoring importance phrases (algorithme multi-critères)
+5. Sélection top phrases dans limite 1200 caractères
+6. Reconstruction texte cohérent avec ponctuation correcte
 
-**Output:** Key facts (1200 chars) with entities and data preserved
+**Output :** faits clés (1200 chars) avec entités et données préservées
 
-### PASS 3: Synthesis (Personalized Formatting)
+### PASS 3 : Synthèse (formatage personnalisé)
 
-**Objective:** Generate personalized, conversational summaries.
+**Objectif :** générer résumés personnalisés conversationnels.
 
-**Tools:**
-- `LLMService` (GPT-4o-mini or Groq Llama)
+**Outils :**
+- `LLMService` (GPT-4o-mini ou Groq Llama)
 
-**Strategy:**
-1. Prompt engineering for "Noto style" (friendly, concise, factual)
-2. User personalization (name, language, interests)
-3. Source attribution (inline citations [1][2][3])
-4. Dual output: Text (250 words) + Audio script (140 words)
+**Stratégie :**
+1. Prompt engineering pour "style Noto" (friendly, concis, factuel)
+2. Personnalisation utilisateur (nom, langue, intérêts)
+3. Attribution sources (citations inline [1][2][3])
+4. Double output : Texte (250 mots) + Script audio (140 mots)
 
-**Output:** Personalized summary with sources
+**Output :** résumé personnalisé avec sources
 
-### PASS 4: Delivery (Voice Synthesis)
+### PASS 4 : Livraison (synthèse vocale)
 
-**Objective:** Convert text to natural speech with user's voice.
+**Objectif :** convertir texte en parole naturelle avec voix de l'utilisateur.
 
-**Tools:**
-- `TTSService` (XTTS-v2 neural voice cloning)
-- `WhatsAppService` (Business API)
+**Outils :**
+- `TTSService` (clonage vocal neural XTTS-v2)
+- `WhatsAppService` (API Business)
 
-**Strategy:**
-1. Check for user voice profile
-2. Generate audio with voice cloning (or default voice)
-3. Send audio message + text sources separately
-4. Log conversation for analytics
+**Stratégie :**
+1. Vérifier profil vocal utilisateur
+2. Générer audio avec clonage vocal (ou voix par défaut)
+3. Envoyer message audio + sources texte séparément
+4. Logger conversation pour analytics
 
-**Output:** Audio briefing (OGG format) delivered via WhatsApp
-
----
-
-## 🔬 What Makes This Project Stand Out?
-
-### 1. **Real Production System**
-- Not a toy project - handles real users, real conversations
-- Comprehensive error handling for all failure modes
-- Caching strategy to minimize API costs
-- Database-backed user management
-
-### 2. **Advanced AI Techniques**
-- **Named Entity Recognition** for factual validation
-- **Multi-criteria scoring** for content prioritization
-- **Voice cloning** with neural TTS
-- **Prompt engineering** for consistent LLM outputs
-
-### 3. **Software Engineering Best Practices**
-- **Type hints** throughout codebase
-- **Google-style docstrings** with examples
-- **Constants** instead of magic numbers
-- **Async/await** for concurrent operations
-- **Dependency injection** for testability
-
-### 4. **Testing Maturity**
-- **Unit tests** with mocked dependencies
-- **Integration tests** for full pipeline
-- **Error handling tests** for resilience
-- **Parametrized tests** for edge cases
-
-### 5. **Architecture Documentation**
-- Clear separation of concerns (API → Orchestrator → Services)
-- State machine for onboarding
-- Command pattern for extensibility
-- ARCHITECTURE_UNIQUE.md specification
+**Output :** briefing audio (format OGG) livré via WhatsApp
 
 ---
 
-## 📚 Project Structure
+## Points distinctifs du projet
+
+### 1. Système de production réel
+- Pas un projet jouet - gère vrais utilisateurs, vraies conversations
+- Gestion d'erreurs complète pour tous modes de défaillance
+- Stratégie de cache pour minimiser coûts API
+- Gestion utilisateurs basée sur base de données
+
+### 2. Techniques IA avancées
+- Reconnaissance d'entités nommées pour validation factuelle
+- Scoring multi-critères pour priorisation contenu
+- Clonage vocal avec TTS neural
+- Prompt engineering pour outputs LLM consistants
+
+### 3. Meilleures pratiques de software engineering
+- Type hints dans tout le codebase
+- Docstrings style Google avec exemples
+- Constantes au lieu de magic numbers
+- Async/await pour opérations concurrentes
+- Injection de dépendances pour testabilité
+
+### 4. Maturité des tests
+- Tests unitaires avec dépendances mockées
+- Tests d'intégration pour pipeline complet
+- Tests de gestion d'erreurs pour résilience
+- Tests paramétrés pour edge cases
+
+### 5. Documentation d'architecture
+- Séparation claire des responsabilités (API → Orchestrator → Services)
+- Machine à états pour onboarding
+- Pattern command pour extensibilité
+- Spécification ARCHITECTURE_UNIQUE.md
+
+---
+
+## Structure du projet
 
 ```
 noto/
 ├── app/
 │   ├── api/
-│   │   └── main.py                 # FastAPI endpoints, webhook handling
+│   │   └── main.py                 # Endpoints FastAPI, gestion webhook
 │   ├── models/
-│   │   ├── database.py             # SQLAlchemy models (User, Preference, Conversation)
-│   │   └── schemas.py              # Pydantic schemas for validation
+│   │   ├── database.py             # Modèles SQLAlchemy (User, Preference, Conversation)
+│   │   └── schemas.py              # Schémas Pydantic pour validation
 │   ├── services/
-│   │   ├── orchestrator.py         # 🧠 Central coordinator (state machine)
-│   │   ├── perplexica_service.py   # AI-powered search integration
-│   │   ├── llm_service.py          # GPT-4o-mini / Groq LLM wrapper
-│   │   ├── tts_service.py          # XTTS-v2 voice synthesis
-│   │   ├── whatsapp_service.py     # WhatsApp Business API client
+│   │   ├── orchestrator.py         # Coordinateur central (machine à états)
+│   │   ├── perplexica_service.py   # Intégration recherche IA
+│   │   ├── llm_service.py          # Wrapper GPT-4o-mini / Groq LLM
+│   │   ├── tts_service.py          # Synthèse vocale XTTS-v2
+│   │   ├── whatsapp_service.py     # Client API WhatsApp Business
 │   │   └── news/
-│   │       ├── collector_sonar.py  # Perplexity Sonar news collection
-│   │       └── summarizer_gpt5.py  # News briefing generation
+│   │       ├── collector_sonar.py  # Collecte actualités Perplexity Sonar
+│   │       └── summarizer_gpt5.py  # Génération briefings actualités
 │   └── utils/
-│       ├── key_facts_extractor.py  # 🎯 NER + importance scoring
-│       ├── cache.py                # Redis caching utilities
-│       └── validate.py             # News validation logic
+│       ├── key_facts_extractor.py  # NER + scoring importance
+│       ├── cache.py                # Utilitaires cache Redis
+│       └── validate.py             # Logique validation actualités
 ├── tests/
-│   ├── test_api.py                 # API endpoint tests
-│   ├── test_integration.py         # End-to-end pipeline tests
-│   ├── test_key_facts_extractor.py # NER and scoring tests
-│   └── test_orchestrator_error_handling.py  # Error resilience tests
-├── ARCHITECTURE_UNIQUE.md          # System architecture specification
-├── README.md                       # This file
-├── requirements.txt                # Python dependencies
-├── .env.example                    # Environment variable template
-├── docker-compose.yml              # Docker orchestration
-├── Dockerfile                      # Container image definition
-└── pytest.ini                      # Test configuration
+│   ├── test_api.py                 # Tests endpoints API
+│   ├── test_integration.py         # Tests pipeline end-to-end
+│   ├── test_key_facts_extractor.py # Tests NER et scoring
+│   └── test_orchestrator_error_handling.py  # Tests résilience erreurs
+├── ARCHITECTURE_UNIQUE.md          # Spécification architecture système
+├── README.md                       # Ce fichier
+├── requirements.txt                # Dépendances Python
+├── .env.example                    # Template variables d'environnement
+├── docker-compose.yml              # Orchestration Docker
+├── Dockerfile                      # Définition image container
+└── pytest.ini                      # Configuration tests
 ```
 
 ---
 
-## 🎯 Future Enhancements
+## Améliorations futures
 
-### Short-term (1-2 months)
-- [ ] **Multi-language support** (English, Spanish, German)
-- [ ] **Scheduled briefings** (daily at user-specified time)
-- [ ] **User feedback loop** (rate news quality)
-- [ ] **Web dashboard** for preferences management
+### Court terme (1-2 mois)
+- Support multi-langues (anglais, espagnol, allemand)
+- Briefings planifiés (quotidien à heure spécifiée utilisateur)
+- Boucle de feedback utilisateur (noter qualité actualités)
+- Dashboard web pour gestion préférences
 
-### Medium-term (3-6 months)
-- [ ] **Local LLM integration** (Llama 3, Mistral) to eliminate API costs
-- [ ] **Multi-source aggregation** (Twitter, Reddit, Hacker News)
-- [ ] **Fact-checking layer** (cross-reference claims)
-- [ ] **Podcast generation** (longer-form audio briefings)
+### Moyen terme (3-6 mois)
+- Intégration LLM local (Llama 3, Mistral) pour éliminer coûts API
+- Agrégation multi-sources (Twitter, Reddit, Hacker News)
+- Couche fact-checking (cross-référencer affirmations)
+- Génération podcasts (briefings audio long format)
 
-### Long-term (6-12 months)
-- [ ] **Mobile app** (native iOS/Android)
-- [ ] **Enterprise version** (team briefings, analytics dashboard)
-- [ ] **Multi-modal output** (video summaries, infographics)
-- [ ] **Conversation memory** (follow-up questions, context awareness)
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### Long terme (6-12 mois)
+- Application mobile (iOS/Android natif)
+- Version entreprise (briefings équipe, dashboard analytics)
+- Output multi-modal (résumés vidéo, infographies)
+- Mémoire conversationnelle (questions de suivi, conscience du contexte)
 
 ---
 
-## 🙏 Acknowledgments
+## Licence
 
-- [Perplexity AI](https://www.perplexity.ai/) - AI search and Sonar API
-- [OpenAI](https://openai.com/) - GPT-4o-mini for summarization
-- [Groq](https://groq.com/) - Fast LLM inference
-- [Coqui TTS](https://github.com/coqui-ai/TTS) - Open-source voice cloning
-- [FastAPI](https://fastapi.tiangolo.com/) - Modern web framework
-- [WhatsApp Business Platform](https://developers.facebook.com/docs/whatsapp) - Messaging interface
-- [SpaCy](https://spacy.io/) - Industrial-strength NLP
+Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour détails.
 
 ---
 
-## 📞 Contact
+## Remerciements
 
-**Author:** Your Name
-**Email:** your.email@example.com
-**LinkedIn:** [linkedin.com/in/yourprofile](https://linkedin.com/in/yourprofile)
-**Portfolio:** [yourportfolio.com](https://yourportfolio.com)
+- [Perplexity AI](https://www.perplexity.ai/) - Recherche IA et API Sonar
+- [OpenAI](https://openai.com/) - GPT-4o-mini pour résumés
+- [Groq](https://groq.com/) - Inférence LLM rapide
+- [Coqui TTS](https://github.com/coqui-ai/TTS) - Clonage vocal open source
+- [FastAPI](https://fastapi.tiangolo.com/) - Framework web moderne
+- [WhatsApp Business Platform](https://developers.facebook.com/docs/whatsapp) - Interface messagerie
+- [SpaCy](https://spacy.io/) - NLP industriel
 
 ---
 
-<p align="center">
-  <strong>Built with ❤️ for the future of personalized information consumption</strong>
-</p>
+**Contact :** [Votre email ou LinkedIn]
 
-<p align="center">
-  <i>Noto transforms hours of reading into minutes of listening.</i>
-</p>
+---
+
+*Noto transforme des heures de lecture en minutes d'écoute.*
