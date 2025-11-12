@@ -18,7 +18,7 @@ Noto est un **pipeline IA de bout en bout** qui automatise le processus complet 
 
 1. **Collecte** d'actualités récentes depuis des sources fiables (Perplexity Sonar)
 2. **Analyse** du contenu via reconnaissance d'entités nommées et scoring d'importance
-3. **Synthèse** de résumés personnalisés via LLMs (GPT-4o-mini)
+3. **Synthèse** de résumés personnalisés via LLMs (GPT-5-mini)
 4. **Livraison** sur WhatsApp avec clonage vocal naturel (XTTS-v2)
 
 **Résultat :** briefings audio personnalisés de 5 minutes au lieu de 30+ minutes de lecture.
@@ -55,7 +55,7 @@ graph TB
     subgraph "Pipeline IA - PASS 2 : Traitement"
         EXTRACT[AdvancedContentExtractor<br/>8000+ chars/source]
         NER[KeyFactsExtractor<br/>NER + Scoring importance]
-        LLM[LLMService<br/>Synthèse GPT-4o-mini]
+        LLM[LLMService<br/>Synthèse GPT-5-mini]
     end
 
     subgraph "Livraison"
@@ -103,7 +103,7 @@ sequenceDiagram
     participant Bot as Bot Noto
     participant Perp as Perplexica IA
     participant NER as KeyFactsExtractor
-    participant LLM as GPT-4o-mini
+    participant LLM as GPT-5-mini
     participant TTS as XTTS-v2
 
     User->>Bot: "actualités tech"
@@ -196,7 +196,7 @@ Utilise **XTTS-v2** (Coqui TTS) pour synthèse vocale naturelle :
 
 ### IA et ML
 - **Perplexity Sonar API** - Collecte d'actualités par IA
-- **OpenAI GPT-4o-mini** - Résumé et formatage des actualités
+- **OpenAI GPT-5-mini** - Résumé et formatage des actualités
 - **Groq API** - LLM alternatif (Llama 3.8B, tier gratuit)
 - **SpaCy (xx_ent_wiki_sm)** - NER multilingue
 - **XTTS-v2 (Coqui TTS)** - Clonage vocal neural
@@ -224,8 +224,6 @@ Utilise **XTTS-v2** (Coqui TTS) pour synthèse vocale naturelle :
 | **Taux de hit cache** | ~70% | Cache Redis pour requêtes répétées (TTL 1h) |
 | **Coût (tier gratuit)** | 0€/mois | Groq gratuit, TTS auto-hébergé, WhatsApp 1000 conversations gratuites |
 | **Scalabilité** | Horizontale | Ajouter workers FastAPI, cluster Redis |
-
-> **Note :** Les métriques ci-dessus sont basées sur la configuration du projet et les tiers d'API au moment du développement (Q1 2025). Les performances réelles dépendent de votre infrastructure, de la charge et des limitations API actuelles. Tests recommandés avant déploiement production.
 
 **Goulot d'étranglement :** rate limits API LLM (résolu avec tier payant ou LLM local)
 
@@ -282,7 +280,7 @@ WHATSAPP_VERIFY_TOKEN=votre_token_verification_aleatoire
 
 # Services IA
 GROQ_API_KEY=votre_cle_groq          # Tier gratuit : 30 req/min
-OPENAI_API_KEY=votre_cle_openai      # GPT-4o-mini pour résumés
+OPENAI_API_KEY=votre_cle_openai      # GPT-5-mini pour résumés
 PPLX_API_KEY=votre_cle_perplexity    # Sonar pour collecte actualités
 
 # Optionnel : Perplexica (recherche IA auto-hébergée)
@@ -506,7 +504,7 @@ Noto : Centres d'intérêt mis à jour
 **Objectif :** générer résumés personnalisés conversationnels.
 
 **Outils :**
-- `LLMService` (GPT-4o-mini ou Groq Llama)
+- `LLMService` (GPT-5-mini ou Groq Llama)
 
 **Stratégie :**
 1. Prompt engineering pour "style Noto" (friendly, concis, factuel)
@@ -582,7 +580,7 @@ noto/
 │   ├── services/
 │   │   ├── orchestrator.py         # Coordinateur central (machine à états)
 │   │   ├── perplexica_service.py   # Intégration recherche IA
-│   │   ├── llm_service.py          # Wrapper GPT-4o-mini / Groq LLM
+│   │   ├── llm_service.py          # Wrapper GPT-5-mini / Groq LLM
 │   │   ├── tts_service.py          # Synthèse vocale XTTS-v2
 │   │   ├── whatsapp_service.py     # Client API WhatsApp Business
 │   │   └── news/
