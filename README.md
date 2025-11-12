@@ -338,6 +338,89 @@ pytest tests/test_orchestrator_error_handling.py  # Résilience erreurs
 
 ---
 
+## Documentation API
+
+### Interface Swagger/OpenAPI interactive
+
+Noto expose une **documentation API complète et interactive** générée automatiquement par FastAPI.
+
+#### Accès à la documentation
+
+Une fois le serveur démarré :
+
+```bash
+# Démarrer le serveur
+uvicorn app.api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Accédez à la documentation interactive :
+
+- **Swagger UI** : [http://localhost:8000/docs](http://localhost:8000/docs)
+- **ReDoc** : [http://localhost:8000/redoc](http://localhost:8000/redoc)
+- **OpenAPI Schema** : [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json)
+
+### Fonctionnalités de la documentation
+
+La documentation interactive permet de :
+
+- **Explorer tous les endpoints** organisés par tags (System, WhatsApp, Testing)
+- **Voir les schémas de requêtes/réponses** avec exemples
+- **Tester l'API directement** depuis le navigateur
+- **Comprendre le pipeline IA** avec descriptions détaillées
+
+### Catégories d'endpoints
+
+#### System
+- `GET /` - Informations de base sur l'API
+- `GET /health` - Health check complet (DB, cache, APIs, scheduler)
+
+#### WhatsApp
+- `GET /webhook` - Vérification webhook WhatsApp
+- `POST /webhook` - Réception de messages WhatsApp
+
+#### Testing
+- `POST /test/search` - Test recherche Perplexica
+- `POST /test/pipeline` - Test pipeline complet multi-intérêts
+- `POST /test/tts` - Test synthèse vocale
+- `POST /test/message` - Test traitement de message complet
+- `POST /test/briefing` - Test génération de briefing
+
+### Exemples d'utilisation de l'API
+
+#### Health check
+
+```bash
+curl http://localhost:8000/health
+```
+
+#### Test de recherche
+
+```bash
+curl -X POST http://localhost:8000/test/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "actualités intelligence artificielle"}'
+```
+
+#### Test de synthèse vocale
+
+```bash
+curl -X POST http://localhost:8000/test/tts \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Voici les actualités tech du jour"}'
+```
+
+### Schémas de réponse
+
+Tous les endpoints utilisent des schémas Pydantic validés avec :
+- Type hints complets
+- Validation automatique des données
+- Exemples intégrés dans la documentation
+- Messages d'erreur explicites
+
+Voir `app/api/schemas.py` pour tous les modèles de données.
+
+---
+
 ## Interaction utilisateur
 
 ### Commandes
